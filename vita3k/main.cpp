@@ -129,16 +129,20 @@ int main(int argc, char *argv[]) {
         return HostInitFailed;
     }
 
+    std::chrono::system_clock::time_point present = std::chrono::system_clock::now();
+    std::chrono::system_clock::time_point later = std::chrono::system_clock::now();
+    double frame_time = 0.0; 
+    if (cfg.fps_limit != 0.0 && cfg.fps_limit > 0.0)
+        frame_time = 1000.0 / cfg.fps_limit;
     GuiState gui;
     if (!cfg.console) {
         gui::init(gui, host);
 #if DISCORD_RPC
         auto discord_rich_presence_old = host.cfg.discord_rich_presence;
 #endif
-
-        std::chrono::system_clock::time_point present = std::chrono::system_clock::now();
-        std::chrono::system_clock::time_point later = std::chrono::system_clock::now();
-        const double frame_time = 1000.0 / 60.0;
+        present = std::chrono::system_clock::now();
+        later = std::chrono::system_clock::now();
+        
         // Application not provided via argument, show game selector
         while (run_type == app::AppRunType::Unknown) {
             // get the current time & get the time we worked for
@@ -210,8 +214,11 @@ int main(int argc, char *argv[]) {
     if (!gl_renderer.init(host.base_path))
         return RendererInitFailed;
 
+    
+
     while (host.frame_count == 0) {
         // Driver acto!
+
         renderer::process_batches(*host.renderer.get(), host.renderer->features, host.mem, host.cfg, host.base_path.c_str(),
             host.io.title_id.c_str());
 
@@ -239,7 +246,25 @@ int main(int argc, char *argv[]) {
         SDL_SetWindowTitle(host.window.get(), fmt::format("{} | {} ({}) | Please wait, loading...", window_title, host.current_app_title, host.io.title_id).c_str());
     }
 
+    present = std::chrono::system_clock::now();
+    later = std::chrono::system_clock::now();
     while (handle_events(host, gui)) {
+
+        if (cfg.fps_limit_application) {
+            // get the current time & get the time we worked for
+            present = std::chrono::system_clock::now();
+            std::chrono::duration<double, std::milli> work_time = present - later;
+            // check if we are running faster than ~60fps (16.67ms)
+            if (work_time.count() < frame_time) {
+                // sleep for delta time.
+                std::chrono::duration<double, std::milli> delta_ms(frame_time - work_time.count());
+                auto delta_ms_duration = std::chrono::duration_cast<std::chrono::milliseconds>(delta_ms);
+                std::this_thread::sleep_for(std::chrono::milliseconds(delta_ms_duration.count()));
+            }
+            // save the later time
+            later = std::chrono::system_clock::now();
+        }
+
         // Driver acto!
         renderer::process_batches(*host.renderer.get(), host.renderer->features, host.mem, host.cfg, host.base_path.c_str(),
             host.io.title_id.c_str());

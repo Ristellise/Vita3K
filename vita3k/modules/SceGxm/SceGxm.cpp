@@ -1307,7 +1307,7 @@ EXPORT(Ptr<const char>, sceGxmProgramParameterGetName, Ptr<const SceGxmProgramPa
 }
 
 EXPORT(unsigned int, sceGxmProgramParameterGetResourceIndex, const SceGxmProgramParameter *parameter) {
-    assert(parameter);
+    //assert(parameter);
     if (!parameter)
         return RET_ERROR(SCE_GXM_ERROR_INVALID_POINTER);
     return parameter->resource_index;

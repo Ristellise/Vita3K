@@ -247,6 +247,12 @@ void draw_settings_dialog(GuiState &gui, HostState &host) {
         ImGui::Checkbox("Disable experimental ngs support", &host.cfg.disable_ngs);
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Disable experimental support for advanced audio library ngs");
+        ImGui::InputDouble("FPS limit", &host.cfg.fps_limit);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Sets the FPS limit. set 0 to disable.\n*Requires Restart for it to work.");
+        ImGui::Checkbox("Apply FPS limit to Applications", &host.cfg.fps_limit_application);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Should the FPS limit apply to in-game as well?");
         ImGui::Separator();
         ImGui::TextColored(GUI_COLOR_TEXT_MENUBAR, "Emulated System Storage Folder");
         ImGui::Spacing();
